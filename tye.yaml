@@ -1,0 +1,4 @@
+name: todobackend
+services:
+- name: backend
+  project: src/Backend/Backend.csproj
