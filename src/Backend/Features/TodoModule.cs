@@ -10,7 +10,7 @@ public class TodoModule : ICarterModule
     {
         app.MapGet(BASE_URL, (TodoContext db, LinkGenerator linkGenerator, HttpContext context) =>
         {
-            var url = linkGenerator.GetUriByName(context, "GetTodos", default);
+            var url = linkGenerator.GetUriByName(context, "GetTodos", default, scheme: "https");
             return db.Todos
                 .Select(i => TodoViewModel.MapFrom(i, $"{url}/{i.Id}"))
                 .ToList();
@@ -24,8 +24,7 @@ public class TodoModule : ICarterModule
         {
             db.Todos.Add(todo);
             await db.SaveChangesAsync();
-            var url = linkGenerator.GetUriByName(context, "GetTodoById", new { id = todo.Id });
-            return TodoViewModel.MapFrom(todo, url);
+            return TodoViewModel.MapFrom(todo, ComposeGetTodoByIdUrl(todo.Id, linkGenerator, context));
         });
 
         app.MapMethods($"{BASE_URL}/{{id}}", new string[] { "PATCH" },
@@ -43,8 +42,9 @@ public class TodoModule : ICarterModule
             entity.Order = item.Order;
 
             await db.SaveChangesAsync();
-            var url = linkGenerator.GetUriByName(context, "GetTodoById", new { id = entity.Id });
-            return Results.Ok(TodoViewModel.MapFrom(entity, url));
+
+            return Results.Ok(TodoViewModel.MapFrom(
+                entity, ComposeGetTodoByIdUrl(entity.Id, linkGenerator, context)));
         });
 
         app.MapDelete(BASE_URL, async (TodoContext db) =>
@@ -68,6 +68,9 @@ public class TodoModule : ICarterModule
             return Results.NoContent();
         });
     }
+
+    private static string? ComposeGetTodoByIdUrl(int id, LinkGenerator linkGenerator, HttpContext context) =>
+        linkGenerator.GetUriByName(context, "GetTodoById", new { id }, scheme: "https");
 }
 
 public record class Todo
