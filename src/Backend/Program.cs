@@ -18,6 +18,7 @@ services.AddCors(options => {
 });
 var app = builder.Build();
 
+app.UseForwardedHeaders();
 app.UseCors();
 app.UseSwagger();
 app.UseSwaggerUI();
